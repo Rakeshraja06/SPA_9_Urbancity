@@ -248,9 +248,7 @@ To run the full demonstration pipeline automatically:
 | **Rahul Dombar** | 2024dc04081@wilp.bits-pilani.ac.in  |
 | **Rajeshwari M** | 2024dc04277@wilp.bits-pilani.ac.in |
 
----
-=======
->>>>>>> fc18fd8b6a4a4ab8ae745a140549a4f6cc51f11f
+
 
 ## 📜 License & Acknowledgments
 
