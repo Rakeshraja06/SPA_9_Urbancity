@@ -236,17 +236,6 @@ To run the full demonstration pipeline automatically:
 | `urbanpulse.ward_energy_summary`| 10 | 30 Days | `ward_id` | 15-min window energy metrics |
 | `urbanpulse.bus_gps_enriched` | 40 | 24 Hours | `route_id` | KTable joined enriched telemetry |
 
----
-
-<<<<<<< HEAD
-## 👥 Contributors
-
-| Name | Role / Focus Area |
-|------|------------------|
-| **Rakesh R** |  2024dc04070@wilp.bits-pilani.ac.in  |
-| **Sumit Mondal** | 2024dc04216@wilp.bits-pilani.ac.in  |
-| **Rahul Dombar** | 2024dc04081@wilp.bits-pilani.ac.in  |
-| **Rajeshwari M** | 2024dc04277@wilp.bits-pilani.ac.in |
 
 
 
