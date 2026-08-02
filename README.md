@@ -1,10 +1,30 @@
 # 🏙️ UrbanPulse — Smart Cities Real-Time Stream Processing Platform
 
-> **Stream Processing and Analytics (DSE ZG556)**  
+> **Stream Processing and Analytics (DSE ZG556) : Group 09**  
 > *Situated Learning — Domain 3: UrbanPulse Smart Cities (Bengaluru Urban Telemetry Engine)*
 
 ---
 
+## 👥 Contributors
+
+| Name | Role / Focus Area | Contribution |
+|------|------------------|--------------|
+| **Rakesh R** | 2024dc04070@wilp.bits-pilani.ac.in | 100% |
+| **Sumit Mondal** | 2024dc04216@wilp.bits-pilani.ac.in | 100% |
+| **Rahul Dombar** | 2024dc04081@wilp.bits-pilani.ac.in | 100% |
+| **Rajeshwari M** | 2024dc04277@wilp.bits-pilani.ac.in | 100% |
+
+---
+
+## 🎯 Problem Statement & Key Challenges
+
+MetroConnect, a city of 4.2 million residents, is implementing **UrbanPulse**, a real-time urban operations platform under the Smart Cities Mission. Despite having extensive data streams from buses, traffic signals, air quality monitors, and smart meters, the city faces critical operational inefficiencies:
+
+1. **Static Traffic Signal Control:** Signal timings do not adapt to real-time congestion (34 min lost idling at signals). *Target: Adaptive signal control within 90s.*
+2. **Stale Bus Arrival Predictions:** ETA predictions lag by 8–12 minutes causing an 18% drop in public transit ridership. *Target: Real-time ETA updates with <60s refresh intervals.*
+3. **Delayed Air Quality Alerts:** AQI breaches are only identified in T+1 reports, missing critical emergencies. *Target: Issue AQI breach alerts within 2 minutes.*
+
+---
 ## 📌 Overview
 
 **UrbanPulse** is a high-throughput, enterprise-grade **Lambda Architecture** platform designed to ingest, process, enrich, and analyze real-time urban telemetry data for smart city management in Bengaluru.
@@ -218,6 +238,7 @@ To run the full demonstration pipeline automatically:
 
 ---
 
+<<<<<<< HEAD
 ## 👥 Contributors
 
 | Name | Role / Focus Area |
@@ -228,6 +249,8 @@ To run the full demonstration pipeline automatically:
 | **Rajeshwari M** | 2024dc04277@wilp.bits-pilani.ac.in |
 
 ---
+=======
+>>>>>>> fc18fd8b6a4a4ab8ae745a140549a4f6cc51f11f
 
 ## 📜 License & Acknowledgments
 
