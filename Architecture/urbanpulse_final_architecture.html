@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UrbanPulse — Final Architecture Diagram</title>
+  <meta name="description" content="UrbanPulse city data platform: 4 data sources, Kafka ingestion, Lambda+Kappa hybrid processing, polyglot storage, and serving layer." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #07101e;
+      --card:      #0f1c2e;
+      --border:    rgba(255,255,255,0.09);
+
+      --c-src:     #22d3ee;   /* cyan    — data sources */
+      --c-kafka:   #f59e0b;   /* amber   — kafka */
+      --c-rt:      #a78bfa;   /* violet  — real-time / Flink */
+      --c-batch:   #34d399;   /* emerald — batch / Spark */
+      --c-store:   #fb7185;   /* rose    — storage */
+      --c-serve:   #60a5fa;   /* blue    — serving */
+
+      --txt:  #e2e8f0;
+      --dim:  #94a3b8;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--txt);
+      min-height: 100vh;
+      padding: 40px 24px 60px;
+    }
+
+    /* ── Ambient glow ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 40% at 10% 5%,  rgba(34,211,238,.06) 0%, transparent 60%),
+        radial-gradient(ellipse 55% 40% at 90% 90%, rgba(167,139,250,.07) 0%, transparent 55%);
+    }
+
+    .page { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; }
+
+    /* ── Header ── */
+    header { text-align: center; margin-bottom: 48px; }
+    .tag {
+      display: inline-block;
+      background: rgba(34,211,238,.12); border: 1px solid rgba(34,211,238,.3);
+      color: var(--c-src); font-size: 11px; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      padding: 4px 14px; border-radius: 999px; margin-bottom: 14px;
+    }
+    h1 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800;
+      background: linear-gradient(135deg, #e2e8f0 30%, #60a5fa 70%, #a78bfa 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      line-height: 1.2; margin-bottom: 8px;
+    }
+    .subtitle { color: var(--dim); font-size: .95rem; }
+
+    /* ── Layer label strip ── */
+    .layer-label {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .layer-label::before {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .layer-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* ── Row container ── */
+    .layer { margin-bottom: 32px; }
+
+    /* ── Cards grid ── */
+    .cards {
+      display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
+    }
+
+    /* ── Single card ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      min-width: 180px;
+      flex: 1 1 180px;
+      max-width: 230px;
+      transition: transform .2s, border-color .2s;
+    }
+    .card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,.22); }
+
+    .card-icon { font-size: 1.5rem; margin-bottom: 8px; }
+    .card-title {
+      font-size: .82rem; font-weight: 700; letter-spacing: .04em;
+      text-transform: uppercase; margin-bottom: 4px;
+    }
+    .card-sub  { font-size: .75rem; color: var(--dim); }
+    .card-mono {
+      font-family: var(--mono); font-size: .7rem;
+      background: rgba(255,255,255,.05); border-radius: 5px;
+      padding: 2px 6px; display: inline-block; margin-top: 6px;
+      color: inherit;
+    }
+
+    /* colour variants */
+    .src   { border-top: 3px solid var(--c-src);   }
+    .kafka { border-top: 3px solid var(--c-kafka);  }
+    .rt    { border-top: 3px solid var(--c-rt);     }
+    .batch { border-top: 3px solid var(--c-batch);  }
+    .store { border-top: 3px solid var(--c-store);  }
+    .serve { border-top: 3px solid var(--c-serve);  }
+
+    .src   .card-title { color: var(--c-src);   }
+    .kafka .card-title { color: var(--c-kafka);  }
+    .rt    .card-title { color: var(--c-rt);     }
+    .batch .card-title { color: var(--c-batch);  }
+    .store .card-title { color: var(--c-store);  }
+    .serve .card-title { color: var(--c-serve);  }
+
+    /* ── Arrow between layers ── */
+    .arrow {
+      text-align: center; font-size: 1.5rem; color: var(--dim);
+      margin: -18px 0 6px;
+      user-select: none;
+    }
+
+    /* ── Kafka special: single wide card ── */
+    .kafka-box {
+      background: var(--card);
+      border: 1px solid rgba(245,158,11,.35);
+      border-top: 3px solid var(--c-kafka);
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+    .kafka-box h3 { color: var(--c-kafka); font-size: .9rem; font-weight: 700; margin-bottom: 14px; text-transform: uppercase; letter-spacing: .08em; }
+    .topic-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+    }
+    .topic {
+      background: rgba(245,158,11,.06);
+      border: 1px solid rgba(245,158,11,.2);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: .78rem;
+    }
+    .topic-name { font-family: var(--mono); color: var(--c-kafka); font-size: .75rem; font-weight: 600; margin-bottom: 4px; }
+    .topic-meta { color: var(--dim); font-size: .72rem; }
+
+    /* ── Processing split ── */
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 700px) { .split { grid-template-columns: 1fr; } }
+
+    .split-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+    .split-box h3 {
+      font-size: .85rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; margin-bottom: 12px;
+    }
+    .rt-box   { border-top: 3px solid var(--c-rt); }
+    .batch-box{ border-top: 3px solid var(--c-batch); }
+    .rt-box   h3 { color: var(--c-rt); }
+    .batch-box h3 { color: var(--c-batch); }
+
+    .item { font-size: .8rem; color: var(--dim); margin-bottom: 6px; padding-left: 14px; position: relative; }
+    .item::before { content: '▸'; position: absolute; left: 0; color: inherit; opacity: .6; }
+    .item b { color: var(--txt); }
+
+    /* ── Storage layer ── */
+    .store-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .db-card {
+      background: var(--card);
+      border: 1px solid rgba(251,113,133,.25);
+      border-top: 3px solid var(--c-store);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .db-card .db-name { color: var(--c-store); font-weight: 700; font-size: .82rem; margin-bottom: 4px; }
+    .db-card .db-use  { color: var(--dim); font-size: .75rem; line-height: 1.5; }
+    .db-card .db-why  { color: #64748b; font-size: .7rem; margin-top: 5px; font-style: italic; }
+
+    /* ── Serving ── */
+    .serve-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .serve-card {
+      background: var(--card);
+      border: 1px solid rgba(96,165,250,.2);
+      border-top: 3px solid var(--c-serve);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .serve-card .sc-title { color: var(--c-serve); font-weight: 700; font-size: .82rem; margin-bottom: 4px; }
+    .serve-card .sc-sub   { color: var(--dim); font-size: .75rem; line-height: 1.5; }
+
+    /* ── Architecture choice banner ── */
+    .choice-banner {
+      background: linear-gradient(135deg, rgba(167,139,250,.1), rgba(52,211,153,.08));
+      border: 1px solid rgba(167,139,250,.3);
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin-top: 40px;
+      font-size: .85rem;
+      line-height: 1.7;
+    }
+    .choice-banner h3 { color: #a78bfa; font-size: .95rem; margin-bottom: 8px; }
+
+    /* ── Legend ── */
+    .legend {
+      display: flex; flex-wrap: wrap; gap: 16px;
+      justify-content: center; margin-top: 32px;
+      font-size: .75rem; color: var(--dim);
+    }
+    .leg { display: flex; align-items: center; gap: 6px; }
+    .leg-dot { width: 10px; height: 10px; border-radius: 50%; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Header ── -->
+  <header>
+    <div class="tag">⬡ DSE ZG556 — Situated Learning Assignment</div>
+    <h1>UrbanPulse Architecture</h1>
+    <p class="subtitle">MetroConnect Real-Time Urban Operations Intelligence Platform — Final Architecture</p>
+  </header>
+
+  <!-- ════════════════════════════════════════════
+       LAYER 1 — DATA SOURCES
+  ════════════════════════════════════════════ -->
+  <div class="layer">
+    <div class="layer-label" style="color:var(--c-src)">Layer 1 — Data Sources</div>
+    <div class="cards">
+
+      <div class="card src">
+        <div class="card-icon">🚌</div>
+        <div class="card-title">Bus GPS</div>
+        <div class="card-sub">12,000 BMTC/BEST-style buses<br>GPS tracker — every 400ms</div>
+        <div class="card-mono">~2,400 events/sec</div>
+      </div>
+
+      <div class="card src">
+        <div class="card-icon">🚦</div>
+        <div class="card-title">Traffic Signals</div>
+        <div class="card-sub">3,800 junction sensors<br>vehicle count + wait time</div>
+        <div class="card-mono">~380 events/sec</div>
+      </div>
+
+      <div class="card src">
+        <div class="card-icon">💨</div>
+        <div class="card-title">Air Quality</div>
+        <div class="card-sub">600 AQI monitors<br>PM2.5 · PM10 · NO₂ · AQI</div>
+        <div class="card-mono">~60 events/sec</div>
+      </div>
+
+      <div class="card src">
+        <div class="card-icon">⚡</div>
+        <div class="card-title">Smart Meters</div>
+        <div class="card-sub">1.1 M electricity meters<br>kWh · voltage · power factor</div>
+        <div class="card-mono">~1,100 events/sec</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- ════════════════════════════════════════════
+       LAYER 2 — KAFKA INGESTION
+  ════════════════════════════════════════════ -->
+  <div class="layer">
+    <div class="layer-label" style="color:var(--c-kafka)">Layer 2 — Kafka Ingestion (3-broker cluster)</div>
+    <div class="kafka-box">
+      <h3>🟡 Apache Kafka — 3 Brokers · Docker Compose</h3>
+      <div class="topic-grid">
+
+        <div class="topic">
+          <div class="topic-name">urbanpulse.bus_gps</div>
+          <div class="topic-meta">40 partitions · key = route_id<br>Retention: <b>24 hours</b> (accident replay)</div>
+        </div>
+
+        <div class="topic">
+          <div class="topic-name">urbanpulse.traffic_signals</div>
+          <div class="topic-meta">15 partitions · key = junction_id<br>Retention: <b>7 days</b></div>
+        </div>
+
+        <div class="topic">
+          <div class="topic-name">urbanpulse.air_quality</div>
+          <div class="topic-meta">10 partitions · key = sensor_id<br>Retention: <b>90 days</b> (pollution trends)</div>
+        </div>
+
+        <div class="topic">
+          <div class="topic-name">urbanpulse.smart_meters</div>
+          <div class="topic-meta">20 partitions · key = meter_id<br>Retention: <b>365 days</b> (regulatory audit)</div>
+        </div>
+
+        <div class="topic">
+          <div class="topic-name">urbanpulse.incidents</div>
+          <div class="topic-meta">5 partitions · Flink alert output</div>
+        </div>
+
+        <div class="topic">
+          <div class="topic-name">urbanpulse.dlq</div>
+          <div class="topic-meta">3 partitions · Dead-letter queue<br>null / out-of-range / bad GPS</div>
+        </div>
+
+        <div class="topic">
+          <div class="topic-name">urbanpulse.health_advisories</div>
+          <div class="topic-meta">5 partitions · Spark SQL output</div>
+        </div>
+
+        <div class="topic">
+          <div class="topic-name">urbanpulse.ward_energy_summary</div>
+          <div class="topic-meta">10 partitions · Spark streaming output</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- ════════════════════════════════════════════
+       LAYER 3 — PROCESSING (Lambda hybrid)
+  ════════════════════════════════════════════ -->
+  <div class="layer">
+    <div class="layer-label" style="color:#c4b5fd">Layer 3 — Processing Layer (Lambda Hybrid)</div>
+    <div class="split">
+
+      <!-- Real-time: Flink -->
+      <div class="split-box rt-box">
+        <h3>⚡ Real-Time — Apache Flink <span style="font-weight:400;font-size:.75rem;color:var(--dim)">(PyFlink · local mode)</span></h3>
+        <div class="item"><b>AQI Emergency</b> — keyed state · AQI > 300 → alert ≤ 2 min</div>
+        <div class="item"><b>Traffic Gridlock</b> — avg wait > 180s for 3 consecutive cycles</div>
+        <div class="item"><b>Bus Bunching</b> — 2 buses same route within 200m for &gt; 5 min</div>
+        <div class="item"><b>Event-time watermarks</b> — handles out-of-order arrival</div>
+        <div class="item"><b>Bus GPS Enrichment</b> — join GPS stream with route_schedule KTable</div>
+        <div class="item">Output → <code style="font-size:.7rem;color:var(--c-rt)">urbanpulse.incidents</code></div>
+      </div>
+
+      <!-- Batch: Spark -->
+      <div class="split-box batch-box">
+        <h3>📦 Batch + Streaming — Apache Spark <span style="font-weight:400;font-size:.75rem;color:var(--dim)">(PySpark · local[*])</span></h3>
+        <div class="item"><b>Ward Energy</b> — 15-min tumbling window · total kWh, avg PF, peak V per ward</div>
+        <div class="item"><b>Dual output</b> — Kafka topic + Parquet (partitioned by ward_id, date)</div>
+        <div class="item"><b>Health Advisory SQL</b> — 10-min rolling avg AQI per zone</div>
+        <div class="item"><b>Zone join</b> — static zone_profile table (population, schools)</div>
+        <div class="item"><b>Filter</b> rolling_avg_aqi > 150 → Update mode output</div>
+        <div class="item">Output → <code style="font-size:.7rem;color:var(--c-batch)">urbanpulse.health_advisories</code> + Parquet</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- ════════════════════════════════════════════
+       LAYER 4 — STORAGE
+  ════════════════════════════════════════════ -->
+  <div class="layer">
+    <div class="layer-label" style="color:var(--c-store)">Layer 4 — Storage Layer (Polyglot Persistence)</div>
+    <div class="store-grid">
+
+      <div class="db-card">
+        <div class="db-name">🗄 InfluxDB</div>
+        <div class="db-use">Time-series sensor data<br>AQI · traffic signals · voltage readings</div>
+        <div class="db-why">Purpose-built TSDB; nanosecond timestamps; downsampling retention policies</div>
+      </div>
+
+      <div class="db-card">
+        <div class="db-name">🗺 PostGIS (PostgreSQL)</div>
+        <div class="db-use">Geospatial bus positions<br>lat/lon, route shapes, bus stops</div>
+        <div class="db-why">Native geo-indexing (GIST); ST_Distance for bunching detection; open-source</div>
+      </div>
+
+      <div class="db-card">
+        <div class="db-name">📂 Apache Parquet</div>
+        <div class="db-use">Historical AQI records<br>Batch Spark output; councillor reports</div>
+        <div class="db-why">Columnar; partitioned by zone + date; open-source; no DB license cost</div>
+      </div>
+
+      <div class="db-card">
+        <div class="db-name">🐘 PostgreSQL</div>
+        <div class="db-use">Councillor report aggregates<br>weekly/monthly ward summaries</div>
+        <div class="db-why">ACID; easy SQL reporting; familiar to city IT teams; zero cost</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- ════════════════════════════════════════════
+       LAYER 5 — SERVING
+  ════════════════════════════════════════════ -->
+  <div class="layer">
+    <div class="layer-label" style="color:var(--c-serve)">Layer 5 — Serving Layer</div>
+    <div class="serve-grid">
+
+      <div class="serve-card">
+        <div class="sc-title">📊 Grafana Dashboards</div>
+        <div class="sc-sub">Live AQI heatmaps · bus fleet map · ward energy tiles<br>For ward officers — no SQL knowledge needed</div>
+      </div>
+
+      <div class="serve-card">
+        <div class="sc-title">🔌 FastAPI Advisory API</div>
+        <div class="sc-sub">REST endpoint for health advisories<br>Pulls from <code>urbanpulse.health_advisories</code> topic</div>
+      </div>
+
+      <div class="serve-card">
+        <div class="sc-title">🚦 Signal Control Interface</div>
+        <div class="sc-sub">Adaptive signal timing<br>HIGH_PRIORITY consumer → MQTT → traffic controllers</div>
+      </div>
+
+      <div class="serve-card">
+        <div class="sc-title">📋 Councillor Reports</div>
+        <div class="sc-sub">Weekly/monthly PDF from Parquet batch<br>PostgreSQL aggregates → auto-generated PDF</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Architecture Choice Banner ── -->
+  <div class="choice-banner">
+    <h3>🏛 Architecture Choice: Lambda Hybrid</h3>
+    UrbanPulse uses a <strong>Lambda Architecture</strong> with Flink for the speed layer (sub-2-minute AQI alerts, signal control)
+    and Spark for the batch layer (15-minute ward aggregations, councillor reports).
+    A pure Kappa approach was rejected because the government reporting mandate requires
+    separate historical reprocessing with auditable batch runs — not streaming recomputation.
+    The two layers share the same Kafka topics so there is no duplicate ingestion code.
+  </div>
+
+  <!-- ── Legend ── -->
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:var(--c-src)"></div> Data Sources</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--c-kafka)"></div> Kafka Ingestion</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--c-rt)"></div> Flink Real-Time</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--c-batch)"></div> Spark Batch</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--c-store)"></div> Storage</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--c-serve)"></div> Serving</div>
+  </div>
+
+</div>
+</body>
+</html>

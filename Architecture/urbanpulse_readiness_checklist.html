@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UrbanPulse — Architecture Readiness Checklist</title>
+  <meta name="description" content="Architecture Readiness Checklist for UrbanPulse government smart city deployment. Covers data sovereignty, open-source mandate, disaster recovery (RPO &lt;15 min / RTO &lt;30 min), and dashboard accessibility for ward officers." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:    #07101e;
+      --card:  #0f1c2e;
+      --border: rgba(255,255,255,0.09);
+      --txt:   #e2e8f0;
+      --dim:   #94a3b8;
+
+      /* pillar colours */
+      --p1: #f59e0b;   /* amber   — data sovereignty */
+      --p2: #34d399;   /* emerald — open-source */
+      --p3: #fb7185;   /* rose    — disaster recovery */
+      --p4: #a78bfa;   /* violet  — accessibility */
+      --p5: #22d3ee;   /* cyan    — security */
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg); color: var(--txt);
+      min-height: 100vh; padding: 40px 20px 60px;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 65% 40% at 10% 5%,  rgba(245,158,11,.05) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 90% 90%, rgba(167,139,250,.06) 0%, transparent 60%);
+    }
+    .page { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; }
+
+    /* ── Header ── */
+    header { text-align: center; margin-bottom: 40px; }
+    .tag {
+      display: inline-block;
+      background: rgba(34,211,238,.1); border: 1px solid rgba(34,211,238,.3);
+      color: var(--p5); font-size: 11px; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      padding: 4px 14px; border-radius: 999px; margin-bottom: 14px;
+    }
+    h1 {
+      font-size: clamp(1.6rem, 4vw, 2.5rem); font-weight: 800;
+      background: linear-gradient(135deg, #e2e8f0 20%, #22d3ee 60%, #a78bfa 95%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      line-height: 1.2; margin-bottom: 8px;
+    }
+    .subtitle { color: var(--dim); font-size: .9rem; }
+
+    /* ── Progress bar ── */
+    .progress-bar {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px 20px;
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 32px;
+    }
+    .prog-label { font-size: .8rem; color: var(--dim); white-space: nowrap; }
+    .prog-track { flex: 1; height: 8px; background: rgba(255,255,255,.06); border-radius: 999px; overflow: hidden; }
+    .prog-fill  { height: 100%; width: 100%; background: linear-gradient(90deg, var(--p2), var(--p5)); border-radius: 999px; }
+    .prog-count { font-weight: 800; font-size: .9rem; color: var(--p2); white-space: nowrap; }
+
+    /* ── Pillar section ── */
+    .pillar { margin-bottom: 28px; }
+    .pillar-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px; border-radius: 8px;
+      margin-bottom: 10px; font-weight: 700; font-size: .85rem;
+      letter-spacing: .05em; text-transform: uppercase;
+    }
+    .p1h { background: rgba(245,158,11,.1);  border-left: 3px solid var(--p1); color: var(--p1); }
+    .p2h { background: rgba(52,211,153,.1);   border-left: 3px solid var(--p2); color: var(--p2); }
+    .p3h { background: rgba(251,113,133,.1);  border-left: 3px solid var(--p3); color: var(--p3); }
+    .p4h { background: rgba(167,139,250,.1);  border-left: 3px solid var(--p4); color: var(--p4); }
+    .p5h { background: rgba(34,211,238,.1);   border-left: 3px solid var(--p5); color: var(--p5); }
+
+    /* ── Checklist item ── */
+    .item {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px 18px;
+      display: flex; gap: 14px; align-items: flex-start;
+      margin-bottom: 8px;
+      transition: border-color .18s, transform .18s;
+    }
+    .item:hover { border-color: rgba(255,255,255,.18); transform: translateX(3px); }
+
+    .item-num {
+      font-family: 'JetBrains Mono', monospace; font-size: .72rem; font-weight: 700;
+      color: var(--dim); min-width: 28px; margin-top: 2px;
+    }
+    .check {
+      font-size: 1.1rem; min-width: 22px; margin-top: 1px;
+    }
+    .item-body { flex: 1; }
+    .item-title { font-size: .85rem; font-weight: 700; margin-bottom: 4px; }
+    .item-desc  { font-size: .76rem; color: var(--dim); line-height: 1.6; }
+    .item-desc b { color: var(--txt); font-weight: 600; }
+
+    /* status badge */
+    .status {
+      font-size: .68rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;
+      padding: 2px 8px; border-radius: 999px; white-space: nowrap; margin-top: 2px;
+      flex-shrink: 0;
+    }
+    .st-ok  { background: rgba(52,211,153,.1);  color: #34d399; border: 1px solid rgba(52,211,153,.25); }
+    .st-req { background: rgba(251,113,133,.1); color: #fb7185; border: 1px solid rgba(251,113,133,.25); }
+    .st-cfg { background: rgba(96,165,250,.1);  color: #60a5fa; border: 1px solid rgba(96,165,250,.25); }
+
+    /* ── Summary footer ── */
+    .summary {
+      background: linear-gradient(135deg, rgba(34,211,238,.08), rgba(52,211,153,.06));
+      border: 1px solid rgba(34,211,238,.2);
+      border-radius: 12px; padding: 20px 24px; margin-top: 12px;
+    }
+    .summary h3 { color: var(--p5); font-size: .9rem; margin-bottom: 10px; }
+    .summary-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px;
+    }
+    .sg { text-align: center; padding: 10px; background: rgba(255,255,255,.03); border-radius: 8px; }
+    .sg-num { font-size: 1.6rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+    .sg-lbl { font-size: .7rem; color: var(--dim); margin-top: 2px; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="tag">✅ Task A — Readiness Assessment</div>
+    <h1>Government Architecture Readiness Checklist</h1>
+    <p class="subtitle">UrbanPulse Smart City Deployment · MetroConnect · DSE ZG556</p>
+  </header>
+
+  <!-- ── Progress ── -->
+  <div class="progress-bar">
+    <span class="prog-label">Checklist Completion</span>
+    <div class="prog-track"><div class="prog-fill"></div></div>
+    <span class="prog-count">14 / 14 Items</span>
+  </div>
+
+  <!-- ════════════════════════════════
+       PILLAR 1 — DATA SOVEREIGNTY (3 items)
+  ════════════════════════════════ -->
+  <div class="pillar">
+    <div class="pillar-header p1h">🏛 Pillar 1 — Data Sovereignty</div>
+
+    <div class="item">
+      <div class="item-num">#01</div>
+      <div class="check">✅</div>
+      <div class="item-body">
+        <div class="item-title">All data must remain on city-owned on-premise servers</div>
+        <div class="item-desc">
+          UrbanPulse runs entirely on <b>city-owned hardware</b>. Kafka brokers, Flink, and Spark are deployed locally via Docker Compose.
+          No cloud provider (AWS, Azure, GCP) is used. GPS positions, AQI readings, and electricity usage never leave the MetroConnect data centre.
+          Verified by: <b>no external bootstrap server in any producer config</b>.
+        </div>
+      </div>
+      <div class="status st-ok">COMPLIANT</div>
+    </div>
+
+    <div class="item">
+      <div class="item-num">#02</div>
+      <div class="check">✅</div>
+      <div class="item-body">
+        <div class="item-title">Data residency — no cross-border transmission of citizen data</div>
+        <div class="item-desc">
+          Smart meter kWh readings and bus passenger occupancy data are <b>personally linkable data</b> under India's DPDP Act 2023.
+          All Parquet files are written to <b>local disk only</b>. Kafka topic retention keeps data on-site for the mandated period (up to 365 days for smart meters).
+          No Kafka MirrorMaker replication to any external cluster is configured.
+        </div>
+      </div>
+      <div class="status st-ok">COMPLIANT</div>
+    </div>
+
+    <div class="item">
+      <div class="item-num">#03</div>
+      <div class="check">✅</div>
+      <div class="item-body">
+        <div class="item-title">Network isolation — city data-centre firewall blocks inbound/outbound streaming</div>
+        <div class="item-desc">
+          Kafka listeners are bound to <b>localhost / internal LAN only</b> (no public IP).
+          Producer <code>bootstrap.servers = localhost:29092</code> — unreachable from outside.
+          Advisory API (FastAPI) exposes only read-only endpoints on the internal city network, not the public internet.
+        </div>
+      </div>
+      <div class="status st-req">INFRA REQUIRED</div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════════
+       PILLAR 2 — OPEN-SOURCE MANDATE (3 items)
+  ════════════════════════════════ -->
+  <div class="pillar">
+    <div class="pillar-header p2h">🟢 Pillar 2 — Open-Source Mandate</div>
+
+    <div class="item">
+      <div class="item-num">#04</div>
+      <div class="check">✅</div>
+      <div class="item-body">
+        <div class="item-title">100% open-source software stack — zero proprietary licences</div>
+        <div class="item-desc">
+          Full stack: <b>Apache Kafka</b> (Apache 2.0) · <b>Apache Flink</b> (Apache 2.0) · <b>Apache Spark</b> (Apache 2.0) · <b>PostgreSQL</b> (PostgreSQL Licence) · <b>PostGIS</b> (GPL 2.0) · <b>InfluxDB OSS</b> (MIT) · <b>Grafana OSS</b> (AGPL 3.0) · <b>Python</b> (PSF).
+          No vendor lock-in. City IT team can modify, audit, and redistribute all components.
+        </div>
+      </div>
+      <div class="status st-ok">COMPLIANT</div>
+    </div>
+
+    <div class="item">
+      <div class="item-num">#05</div>
+      <div class="check">✅</div>
+      <div class="item-body">
+        <div class="item-title">All source code version-controlled and auditable in city Git repository</div>
+        <div class="item-desc">
+          Producers, Flink jobs, Spark scripts, and Docker Compose files are checked into a <b>city-hosted Gitea instance</b>.
+          Any government auditor or ward officer can review the processing logic.
+          No black-box SaaS analytics — every computation is transparent Python code.
+        </div>
+      </div>
+      <div class="status st-ok">COMPLIANT</div>
+    </div>
+
+    <div class="item">
+      <div class="item-num">#06</div>
+      <div class="check">✅</div>
+      <div class="item-body">
+        <div class="item-title">Data formats are open standards — JSON, Parquet, CSV (no proprietary formats)</div>
+        <div class="item-desc">
+          Kafka messages use <b>plain JSON</b> (RFC 8259). Batch output uses <b>Apache Parquet</b> (open columnar format).
+          Councillor reports exported as <b>PDF and CSV</b>.
+          Future systems can ingest UrbanPulse data without any vendor SDK.
+        </div>
+      </div>
+      <div class="status st-ok">COMPLIANT</div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════════
+       PILLAR 3 — DISASTER RECOVERY (4 items)
+  ════════════════════════════════ -->
+  <div class="pillar">
+    <div class="pillar-header p3h">🔴 Pillar 3 — Disaster Recovery (RPO &lt; 15 min · RTO &lt; 30 min)</div>
+
+    <div class="item">
+      <div class="item-num">#07</div>
+      <div class="check">✅</div>
+      <div class="item-body">
+        <div class="item-title">Kafka replication factor = 3 across all 3 brokers (RPO ≈ 0 for in-flight data)</div>
+        <div class="item-desc">
+          Every topic is created with <b>replication-factor=3</b> and <b>min.insync.replicas=2</b>.
+          A single broker failure causes zero data loss — the surviving two brokers hold a complete replica.
+          Producers use <code>acks=all</code> — a message is only acknowledged when all 3 replicas confirm write.
+          <b>RPO for Kafka stream = 0 ms</b> under single-broker failure.
+        </div>
+      </div>
+      <div class="status st-cfg">CONFIG</div>
+    </div>
+
+    <div class="item">
+      <div class="item-num">#08</div>
+      <div class="check">✅</div>
+      <div class="item-body">
+        <div class="item-title">Flink checkpointing every 5 minutes → RTO &lt; 10 min for streaming jobs</div>
+        <div class="item-desc">
+          Flink is configured with <b>RocksDB state backend</b> and checkpoint interval = 5 minutes, saved to local disk.
+          On restart after failure, Flink restores from the last checkpoint (max 5 min of data re-processed from Kafka).
+          With Kafka topic retention ≥ 24 hours, replay is always possible.
+          <b>RTO for Flink = &lt;10 min</b> (5 min checkpoint gap + ~5 min restart time).
+        </div>
+      </div>
+      <div class="status st-cfg">CONFIG</div>
+    </div>
+
+    <div class="item">
+      <div class="item-num">#09</div>
+      <div class="check">✅</div>
+      <div class="item-body">
+        <div class="item-title">Nightly Parquet snapshots taken — historical data survives server failure</div>
+        <div class="item-desc">
+          A nightly cron job (<code>rsync</code>) copies Parquet output directories to a <b>secondary city server</b>.
+          If the primary server fails, councillor reports can be re-generated from the secondary copy within 30 minutes.
+          Parquet files are immutable — no risk of partial writes corrupting the archive.
+        </div>
+      </div>
+      <div class="status st-req">INFRA REQUIRED</div>
+    </div>
+
+    <div class="item">
+      <div class="item-num">#10</div>
+      <div class="check">✅</div>
+      <div class="item-body">
+        <div class="item-title">Dead-letter queue prevents data loss from validation failures</div>
+        <div class="item-desc">
+          Messages that fail validation (null AQI, impossible GPS coords, out-of-range voltage) are routed to <b>urbanpulse.dlq</b> topic — never silently dropped.
+          A 5-minute DLQ error-type distribution report is generated automatically.
+          DLQ topic retention = <b>7 days</b> — enough time for operations team to investigate and replay if needed.
+        </div>
+      </div>
+      <div class="status st-ok">COMPLIANT</div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════════
+       PILLAR 4 — ACCESSIBILITY (2 items)
+  ════════════════════════════════ -->
+  <div class="pillar">
+    <div class="pillar-header p4h">🟣 Pillar 4 — Dashboard Accessibility for Ward Officers</div>
+
+    <div class="item">
+      <div class="item-num">#11</div>
+      <div class="check">✅</div>
+      <div class="item-body">
+        <div class="item-title">Grafana dashboards require no SQL or technical knowledge — pre-built panels only</div>
+        <div class="item-desc">
+          Ward officers access a <b>read-only Grafana dashboard</b> with pre-built panels: live AQI gauge, bus fleet heatmap, ward energy consumption tile.
+          No query language required. All panels load automatically.
+          Dashboard text uses <b>plain English, not technical jargon</b> (e.g. "Air Quality Level" not "PM2.5 μg/m³ rolling 10-min avg").
+        </div>
+      </div>
+      <div class="status st-cfg">CONFIG</div>
+    </div>
+
+    <div class="item">
+      <div class="item-num">#12</div>
+      <div class="check">✅</div>
+      <div class="item-body">
+        <div class="item-title">Councillor reports available as auto-generated PDF — no system access required</div>
+        <div class="item-desc">
+          Weekly ward energy summaries and monthly AQI reports are auto-emailed as <b>PDF attachments</b> generated by the Spark batch job.
+          Councillors receive reports without logging into any system.
+          PDF uses plain tables (no charts) so it prints cleanly on standard A4 paper — accessible to officers in areas with poor monitor availability.
+        </div>
+      </div>
+      <div class="status st-cfg">CONFIG</div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════════
+       PILLAR 5 — SECURITY (2 items)
+  ════════════════════════════════ -->
+  <div class="pillar">
+    <div class="pillar-header p5h">🔵 Pillar 5 — Security &amp; Compliance</div>
+
+    <div class="item">
+      <div class="item-num">#13</div>
+      <div class="check">✅</div>
+      <div class="item-body">
+        <div class="item-title">Kafka SASL authentication — only authorised producers/consumers can connect</div>
+        <div class="item-desc">
+          Kafka brokers are configured with <b>SASL/PLAIN</b> authentication (username + password per service).
+          Separate credentials for: air quality producer, bus GPS producer, Flink job, Spark job, advisory API consumer.
+          Prevents rogue sensors or unauthorised services from injecting fake data into the pipeline.
+        </div>
+      </div>
+      <div class="status st-req">INFRA REQUIRED</div>
+    </div>
+
+    <div class="item">
+      <div class="item-num">#14</div>
+      <div class="check">✅</div>
+      <div class="item-body">
+        <div class="item-title">Audit log — all pipeline configuration changes are logged with timestamp and operator ID</div>
+        <div class="item-desc">
+          Any change to Kafka topic configuration, Flink job parameters, or Spark window sizes is recorded in a <b>city audit log</b>.
+          Provides accountability trail for state government inspections.
+          Log stored in append-only PostgreSQL table — operators cannot modify past entries.
+        </div>
+      </div>
+      <div class="status st-req">INFRA REQUIRED</div>
+    </div>
+
+  </div>
+
+  <!-- ── Summary footer ── -->
+  <div class="summary">
+    <h3>📋 Checklist Summary — 14 Items Across 5 Pillars</h3>
+    <div class="summary-grid">
+      <div class="sg">
+        <div class="sg-num" style="color:var(--p2)">7</div>
+        <div class="sg-lbl">✅ Compliant / Implemented</div>
+      </div>
+      <div class="sg">
+        <div class="sg-num" style="color:#60a5fa">4</div>
+        <div class="sg-lbl">⚙️ Config / Code Required</div>
+      </div>
+      <div class="sg">
+        <div class="sg-num" style="color:var(--p3)">4</div>
+        <div class="sg-lbl">🏗 Infrastructure Required</div>
+      </div>
+      <div class="sg">
+        <div class="sg-num" style="color:var(--p1)">0</div>
+        <div class="sg-lbl">❌ Gaps / Non-compliant</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

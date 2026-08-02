@@ -1,0 +1,6 @@
+zone_id,zone,zone_name,population,num_schools,num_hospitals
+AQ-ZONE-North,North,North MetroConnect,320000,28,4
+AQ-ZONE-South,South,South MetroConnect,415000,35,6
+AQ-ZONE-East,East,East MetroConnect,280000,22,3
+AQ-ZONE-West,West,West MetroConnect,350000,31,5
+AQ-ZONE-Central,Central,Central MetroConnect,195000,18,8
