@@ -16,6 +16,40 @@
 
 ---
 
+## Problem Statement
+
+MetroConnect, a city of 4.2 million residents, is implementing **UrbanPulse**, a real-time urban operations platform under the Smart Cities Mission. Despite having extensive data streams from buses, traffic signals, air quality monitors, and smart meters, the city faces critical operational inefficiencies that hinder mobility, commuter satisfaction, and public health responsiveness.
+
+## Key Challenges
+
+1. **Static Traffic Signal Control**
+   - Current signal timings do not adapt to real-time congestion.
+   - Average commute time: **47 minutes**, with **34 minutes lost idling at signals** during peak hours.
+   - **Target:** Implement adaptive signal control within **90 seconds** of congestion detection.
+
+2. **Stale Bus Arrival Predictions**
+   - Bus ETA predictions lag by **8–12 minutes**.
+   - Resulting in **commuter dissatisfaction** and an **18% drop in ridership** over 2 years.
+   - **Target:** Deliver real-time ETA updates with **<60 second refresh intervals**.
+
+3. **Delayed Air Quality Alerts**
+   - AQI breaches are only identified in **T+1 reports**.
+   - No real-time health advisories; **3 AQI emergencies missed in FY24**.
+   - **Target:** Issue AQI breach alerts within **2 minutes** of threshold crossing.
+
+## Core Problem
+
+The lack of **real-time responsiveness** across traffic, transit, and environmental monitoring systems leads to:
+- Inefficient urban mobility
+- Declining public trust in city services
+- Missed opportunities for proactive health and safety interventions
+
+**UrbanPulse must evolve into a unified, real-time decision support system to address these pain points and achieve operational excellence.**
+
+
+
+---
+
 ## 📌 Overview
 
 **UrbanPulse** is a high-throughput, enterprise-grade **Lambda Architecture** platform designed to ingest, process, enrich, and analyze real-time urban telemetry data for smart city management in Bengaluru.
