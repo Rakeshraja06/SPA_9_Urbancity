@@ -1,6 +1,6 @@
 # 🏙️ UrbanPulse — Smart Cities Real-Time Stream Processing Platform 
 
-**Stream Processing and Analytics (DSE ZG556)  : Group 09 **
+**Stream Processing and Analytics (DSE ZG556)  : Group 09**
 
 > *Situated Learning — Domain 3: UrbanPulse Smart Cities (Bengaluru Urban Telemetry Engine)*
 
