@@ -5,6 +5,17 @@
 
 ---
 
+## 👥 Contributors
+
+| Name | Role / Focus Area | Contribution|
+|------|------------------|-----------|
+| **Rakesh R** |  2024dc04070@wilp.bits-pilani.ac.in  | 100% |
+| **Sumit Mondal** | 2024dc04216@wilp.bits-pilani.ac.in  | 100% |
+| **Rahul Dombar** | 2024dc04081@wilp.bits-pilani.ac.in  | 100% |
+| **Rajeshwari M** | 2024dc04277@wilp.bits-pilani.ac.in | 100% |
+
+---
+
 ## 📌 Overview
 
 **UrbanPulse** is a high-throughput, enterprise-grade **Lambda Architecture** platform designed to ingest, process, enrich, and analyze real-time urban telemetry data for smart city management in Bengaluru.
@@ -218,16 +229,6 @@ To run the full demonstration pipeline automatically:
 
 ---
 
-## 👥 Contributors
-
-| Name | Role / Focus Area |
-|------|------------------|
-| **Rakesh R** |  2024dc04070@wilp.bits-pilani.ac.in  |
-| **Sumit Mondal** | 2024dc04216@wilp.bits-pilani.ac.in  |
-| **Rahul Dombar** | 2024dc04081@wilp.bits-pilani.ac.in  |
-| **Rajeshwari M** | 2024dc04277@wilp.bits-pilani.ac.in |
-
----
 
 ## 📜 License & Acknowledgments
 
