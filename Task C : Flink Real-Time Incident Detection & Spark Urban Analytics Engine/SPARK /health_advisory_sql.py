@@ -60,16 +60,9 @@ def run_spark():
         SparkSession.builder
         .appName("UrbanPulse-HealthAdvisory")
         .master("local[*]")
-        # Performance and reliability configurations
-        .config("spark.sql.shuffle.partitions", "4")
-        .config("spark.sql.streaming.metricsEnabled", "true")
-        .config("spark.sql.adaptive.enabled", "true")  # Adaptive query execution
         .getOrCreate()
     )
     spark.sparkContext.setLogLevel("WARN")
-    
-    log.info("✓ Spark Session initialized with adaptive query execution")
-    log.info("  - Shuffle partitions: 4 | Metrics: enabled")
 
     # ── Schema of air_quality events ──
     schema = StructType([
@@ -100,15 +93,9 @@ def run_spark():
     events = (
         raw.select(from_json(col("value").cast("string"), schema).alias("d"))
         .select("d.*")
-        # Data quality validations
         .filter(col("aqi").isNotNull())            # skip null AQI (faulty sensors)
-        .filter(col("aqi").between(0, 500))        # Valid AQI range
-        .filter(col("pm25") >= 0)                  # No negative PM2.5
-        .filter(col("pm10") >= 0)                  # No negative PM10
         .withWatermark("timestamp", "10 minutes")  # 10-min allowed lateness
     )
-    
-    log.info("✓ Data quality validations applied: AQI range [0-500], PM2.5/PM10 >= 0")
 
     # Register as temp view for SQL
     events.createOrReplaceTempView("aqi_stream")
