@@ -61,19 +61,11 @@ def run_spark():
         SparkSession.builder
         .appName("UrbanPulse-WardEnergy")
         .master("local[*]")
-        # Performance optimizations
-        .config("spark.sql.shuffle.partitions", "4")  # Optimize for local demo
-        .config("spark.streaming.kafka.maxRatePerPartition", "100")
-        .config("spark.sql.streaming.metricsEnabled", "true")
         # Kafka package — include when running:
         # spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0
         .getOrCreate()
     )
     spark.sparkContext.setLogLevel("WARN")
-    
-    print("✓ Spark Session initialized with performance optimizations")
-    print(f"  - Shuffle partitions: 4")
-    print(f"  - Streaming metrics: enabled")
 
     # Schema of smart_meters events
     schema = StructType([
@@ -95,22 +87,12 @@ def run_spark():
         .load()
     )
 
-    # ── Parse JSON with data quality filters ──
+    # ── Parse JSON ──
     events = (
         raw.select(from_json(col("value").cast("string"), schema).alias("d"))
         .select("d.*")
-        # Data quality checks: filter out invalid readings
-        .filter(col("kwh_reading").isNotNull())
-        .filter(col("kwh_reading") >= 0)  # No negative energy consumption
-        .filter(col("voltage").between(200, 250))  # Valid voltage range
-        .filter(col("power_factor").between(0, 1))  # Valid power factor range
         .withWatermark("timestamp", "45 minutes")   # ← assignment requirement
     )
-    
-    print("✓ Data quality filters applied:")
-    print("  - Valid kwh_reading (>= 0)")
-    print("  - Voltage range: 200-250V")
-    print("  - Power factor: 0-1")
 
     # ── 15-minute tumbling window per ward_id ──
     aggregated = (
